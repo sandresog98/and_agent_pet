@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Session notifier bell">
+  <defs>
+    <linearGradient id="bell-body" x1="14" y1="10" x2="50" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="bell-accent" x1="44" y1="8" x2="58" y2="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#0f172a"/>
+  <path d="M32 11c-7.7 0-14 6.3-14 14v8.2c0 1.4-.5 2.7-1.4 3.8l-2.1 2.6c-1.4 1.8-.2 4.4 2.1 4.4h30.8c2.3 0 3.5-2.6 2.1-4.4l-2.1-2.6c-.9-1.1-1.4-2.4-1.4-3.8V25c0-7.7-6.3-14-14-14Z" fill="url(#bell-body)" stroke="#94a3b8" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M25 46a7 7 0 0 0 14 0" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="50" cy="14" r="7" fill="url(#bell-accent)" stroke="#0f172a" stroke-width="2"/>
+  <circle cx="32" cy="8" r="2.5" fill="#94a3b8"/>
+</svg>

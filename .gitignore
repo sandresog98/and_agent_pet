@@ -1,0 +1,23 @@
+# Runtime/build outputs
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+dist/
+
+# Local plugin state and logs (never commit)
+state.json
+overlay-settings.json
+overlay-position.json
+*.log
+slot-probe.json
+
+# Gengar frames are not distributed with this repository.
+# Run tools/extract_gengar_frames.py with your own spritesheet/ZIP to create them.
+overlay/frames/*/*.png
+*.zip
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini

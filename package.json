@@ -1,0 +1,65 @@
+{
+  "name": "dsh-session-notifier",
+  "version": "1.4.1",
+  "private": true,
+  "type": "module",
+  "description": "Native Windows companion overlay with a Gengar pet, status bubble, and two distinct soft chimes for DeepSeek Harness session alerts.",
+  "license": "MIT",
+  "author": "Andres Olaya",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandresog98/and_agent_pet.git"
+  },
+  "homepage": "https://github.com/sandresog98/and_agent_pet#readme",
+  "bugs": {
+    "url": "https://github.com/sandresog98/and_agent_pet/issues"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "windows",
+    "overlay",
+    "gengar",
+    "notifications"
+  ],
+  "scripts": {
+    "extract-frames": "python tools/extract_gengar_frames.py"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "NOTICE.md",
+    "requirements.txt",
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "overlay/*.ps1",
+    "overlay/*.cmd",
+    "overlay/*.md",
+    "overlay/frames/README.md",
+    "overlay/frames/*.png",
+    "overlay/frames/*/*.png",
+    "tools/*.py"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout"
+      ]
+    }
+  }
+}
