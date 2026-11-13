@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { homedir } from 'node:os';
@@ -11,8 +11,15 @@ const STATE_VERSION = 1;
 const MAX_ALERTS = 8;
 const MAX_URL_CHARS = 24_000;
 
-function localAppDataDir() {
-  const base = process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local');
+function stateDirectory() {
+  if (process.platform === 'darwin') {
+    return join(homedir(), 'Library', 'Application Support', 'dsh-session-notifier');
+  }
+  if (process.platform === 'win32') {
+    const base = process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local');
+    return join(base, 'dsh-session-notifier');
+  }
+  const base = process.env.XDG_STATE_HOME ?? join(homedir(), '.local', 'state');
   return join(base, 'dsh-session-notifier');
 }
 
@@ -83,21 +90,48 @@ function normalizeState(input) {
   };
 }
 
+function readOverlayManifest(packageDir) {
+  const manifestPath = join(packageDir, 'overlay', 'platforms.json');
+  if (!existsSync(manifestPath)) return undefined;
+  try {
+    return JSON.parse(readFileSync(manifestPath, 'utf8'));
+  } catch (error) {
+    console.warn('dsh-session-notifier: cannot read overlay/platforms.json', error);
+    return undefined;
+  }
+}
+
 function startNativeOverlay(ctx) {
-  if (process.platform !== 'win32') return;
   const packageDir = dirname(fileURLToPath(import.meta.url));
-  const scriptPath = join(packageDir, 'overlay', 'dsh-session-notifier-overlay.ps1');
-  if (!existsSync(scriptPath)) {
-    console.warn('dsh-session-notifier: native overlay script is missing');
+  const manifest = readOverlayManifest(packageDir);
+  const platformSpec = manifest?.[process.platform]
+    ?? (process.platform === 'win32'
+      ? { supported: true, kind: 'powershell', entry: 'windows/dsh-session-notifier-overlay.ps1' }
+      : undefined);
+
+  if (platformSpec === undefined || platformSpec.supported !== true) {
+    console.info(`dsh-session-notifier: no native overlay for ${process.platform}; web bridge remains active`);
     return;
   }
-  const executable = process.env.SystemRoot
-    ? join(process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
-    : 'powershell.exe';
+  if (typeof platformSpec.entry !== 'string' || platformSpec.entry.includes('..')) {
+    console.warn('dsh-session-notifier: invalid overlay entry in platforms.json');
+    return;
+  }
 
-  let child;
-  try {
-    child = spawn(executable, [
+  const overlayRoot = join(packageDir, 'overlay');
+  const entryPath = join(overlayRoot, platformSpec.entry);
+  if (!existsSync(entryPath)) {
+    console.warn(`dsh-session-notifier: overlay entry is missing: ${entryPath}`);
+    return;
+  }
+
+  let command;
+  let args;
+  if (platformSpec.kind === 'powershell') {
+    command = process.env.SystemRoot
+      ? join(process.env.SystemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+      : 'powershell.exe';
+    args = [
       '-NoProfile',
       '-STA',
       '-ExecutionPolicy',
@@ -105,8 +139,19 @@ function startNativeOverlay(ctx) {
       '-WindowStyle',
       'Hidden',
       '-File',
-      scriptPath,
-    ], {
+      entryPath,
+    ];
+  } else if (platformSpec.kind === 'executable') {
+    command = entryPath;
+    args = [];
+  } else {
+    console.warn(`dsh-session-notifier: unsupported overlay kind "${platformSpec.kind}"`);
+    return;
+  }
+
+  let child;
+  try {
+    child = spawn(command, args, {
       stdio: 'ignore',
       windowsHide: true,
     });
@@ -130,7 +175,7 @@ function startNativeOverlay(ctx) {
 }
 
 export function apply(ctx) {
-  const dir = localAppDataDir();
+  const dir = stateDirectory();
   const statePath = join(dir, 'state.json');
   const tempPath = `${statePath}.tmp`;
   let queue = Promise.resolve();

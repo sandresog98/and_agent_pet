@@ -1,8 +1,16 @@
 # and_agent_pet — DSH Session Notifier
 
-Overlay nativo de Windows para **DeepSeek Harness**: una mascota Gengar que se queda por encima de las demás ventanas, muestra el estado de tus sesiones y avisa con animaciones y sonidos cuando una sesión piensa, ejecuta una herramienta, pide aprobación o termina.
+Overlay nativo **platform-adaptive** para **DeepSeek Harness**: una mascota Gengar que se queda por encima de las demás ventanas, muestra el estado de tus sesiones y avisa con animaciones y sonidos cuando una sesión piensa, ejecuta una herramienta, pide aprobación o termina.
 
-El plugin de la interfaz web es un puente invisible: ya no dibuja una campana dentro de DSH; lee el estado de las sesiones y lo publica para el overlay nativo. El overlay se inicia automáticamente con DSH.
+Un solo repositorio. El host lee `overlay/platforms.json` y arranca la implementación de la plataforma actual; el puente web y el esquema de estado son compartidos.
+
+| Plataforma | Overlay nativo | Estado |
+|---|---|---|
+| Windows 10/11 | WPF + PowerShell | Funcional |
+| macOS | AppKit (slot preparado) | Pendiente; el puente de estado ya funciona |
+| Linux | Slot preparado | Pendiente; el puente de estado ya funciona |
+
+El plugin de la interfaz web es un puente invisible: ya no dibuja una campana dentro de DSH; lee el estado de las sesiones y lo publica para el overlay nativo.
 
 > Repositorio: <https://github.com/sandresog98/and_agent_pet>
 
@@ -21,8 +29,9 @@ El plugin de la interfaz web es un puente invisible: ya no dibuja una campana de
 
 ## Requisitos
 
-- Windows 10/11.
+- Windows 10/11 para el overlay completo actual.
 - DeepSeek Harness (probado con `0.2.2-rc.1`).
+- En macOS/Linux el plugin se instala y el puente de estado funciona, pero el overlay nativo está pendiente.
 - Python 3 y Pillow **solo si quieres extraer los frames de Gengar** desde tu propio spritesheet/ZIP.
 
 ## Instalación
@@ -36,11 +45,13 @@ El plugin de la interfaz web es un puente invisible: ya no dibuja una campana de
 
 2. Instala el plugin en DSH con **Plugin Manager** usando la carpeta absoluta del repo (`install_bundle`). El paquete se llama `dsh-session-notifier`.
 
-3. El overlay se inicia automáticamente al abrir DSH. Si quieres abrirlo aparte:
+3. El overlay se inicia automáticamente al abrir DSH en la plataforma soportada. En Windows, si quieres abrirlo aparte:
 
    ```powershell
-   overlay\Iniciar notificador.cmd
+   overlay\windows\Iniciar notificador.cmd
    ```
+
+En macOS/Linux, el plugin queda activo como puente de estado hasta que se añada la implementación nativa correspondiente.
 
 ## Frames de Gengar
 
@@ -63,14 +74,17 @@ Después de extraerlos, reinicia DSH o cierra y vuelve a abrir el overlay para q
 DSH Web UI
   └─ client.js (puente invisible)
        └─ GET /dsh-session-notifier/state
-            └─ index.js (host) → %LOCALAPPDATA%\dsh-session-notifier\state.json
-                 └─ overlay WPF (PowerShell) lo lee cada 500 ms
+            └─ index.js (host) → state.json
+                 ├─ Windows: %LOCALAPPDATA%\dsh-session-notifier\state.json
+                 ├─ macOS:   ~/Library/Application Support/dsh-session-notifier/state.json
+                 └─ Linux:   $XDG_STATE_HOME/dsh-session-notifier/state.json
+                      └─ overlay/platforms.json → overlay nativo de la plataforma
 ```
 
 - La actividad se obtiene del feed de eventos de la sesión (`tool/call`, `tool/result`, `turn/end`) cada 500 ms mientras hay una sesión en ejecución.
-- El host escribe el estado en `%LOCALAPPDATA%\dsh-session-notifier\state.json`.
+- El host escribe el estado en la ruta de la plataforma.
 - La ruta interna solo acepta peticiones del mismo origen.
-- La posición y la preferencia de sonido se guardan en `%LOCALAPPDATA%\dsh-session-notifier\`.
+- La posición y la preferencia de sonido se guardan junto al estado.
 
 ## Mapeo de filas del spritesheet
 
@@ -89,10 +103,12 @@ DSH Web UI
 ## Estructura
 
 - `client.js`: puente invisible que lee las sesiones y publica el estado.
-- `index.js`: host, ruta de estado y autoarranque del overlay.
-- `overlay/dsh-session-notifier-overlay.ps1`: overlay WPF, mascota, animaciones y sonido.
-- `overlay/Iniciar notificador.cmd`: lanzador sin consola.
-- `overlay/frames/`: frames locales (no incluidos en el repo).
+- `index.js`: host, ruta de estado y autoarranque según la plataforma.
+- `overlay/platforms.json`: manifiesto que elige la implementación nativa.
+- `overlay/windows/`: overlay WPF, mascota, animaciones y sonido.
+- `overlay/macos/`: slot para la app AppKit (guía en `docs/MACOS.md`).
+- `overlay/linux/`: slot para un overlay Linux.
+- `overlay/frames/`: frames compartidos (no incluidos en el repo).
 - `tools/extract_gengar_frames.py`: extractor de frames desde un ZIP/spritesheet propio.
 
 ## Licencia
@@ -103,7 +119,8 @@ Los derechos de **Gengar** pertenecen a Nintendo / Game Freak / The Pokémon Com
 
 ## Limitaciones
 
-- Es una ventana WPF `Topmost`: queda por encima de ventanas normales y de la mayoría de apps a pantalla completa, pero no de juegos en pantalla completa exclusiva.
-- El overlay se inicia con DSH; no se inicia con Windows por sí solo.
+- El overlay completo actual es WPF/Windows: queda por encima de ventanas normales y de la mayoría de apps a pantalla completa, pero no de juegos en pantalla completa exclusiva.
+- macOS y Linux están preparados en el manifiesto, pero el overlay nativo aún no está implementado; el puente de estado sí funciona.
+- El overlay se inicia con DSH; no se inicia con el sistema por sí solo.
 - La página de DSH debe estar abierta para que el estado se actualice en vivo. Si se cierra, el overlay conserva el último estado y luego pasa a reposo/sin conexión.
 - No navega a una sesión concreta; enfoca DSH y la sesión se elige en la barra lateral.

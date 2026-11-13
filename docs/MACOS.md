@@ -1,10 +1,10 @@
 # Guía para replicar el overlay en macOS
 
-El plugin de DSH y el puente de estado son multiplataforma. La parte que hoy es
-exclusiva de Windows es el **overlay nativo**: WPF, PowerShell, `%LOCALAPPDATA%`,
-`powershell.exe` y el lanzador `.cmd`. En macOS hay que sustituir esa capa por
-una app nativa (o por un contenedor web como Tauri/Electron) y ajustar el host
-para arrancarla y escribir el estado en una ruta de macOS.
+El plugin de DSH y el puente de estado son multiplataforma y el host ya es
+platform-adaptive: lee `overlay/platforms.json` y arranca la entrada de la
+plataforma actual. La implementación Windows (WPF/PowerShell) vive en
+`overlay/windows`; para macOS hay que crear `overlay/macos`, activar
+`darwin.supported` y empaquetar la app. El host no necesita una rama nueva.
 
 Esta guía asume que DSH Desktop ya funciona en el Mac y que el plugin se instala
 con Plugin Manager igual que en Windows.
@@ -19,8 +19,8 @@ con Plugin Manager igual que en Windows.
 | Ruta HTTP `/dsh-session-notifier/state` | Sí | **Se reutiliza** |
 | Esquema JSON del estado | Sí | **Se reutiliza** |
 | Frames PNG y mapeo de filas | Sí | **Se reutiliza** |
-| `index.js` (host) | Ruta `%LOCALAPPDATA%`, autoarranque PowerShell | **Cambiar rutas y autoarranque** |
-| Overlay visual | WPF + PowerShell | **Reescribir** (AppKit, Tauri o Electron) |
+| `index.js` (host) | Ruta multiplataforma + manifiesto | **Se reutiliza; solo activar `darwin`** |
+| Overlay visual | `overlay/windows` (WPF) | **Crear `overlay/macos`** (AppKit, Tauri o Electron) |
 | Sonido | `System.Media.SoundPlayer` | **AVAudioPlayer / NSSound** |
 | Lanzador | `.cmd` | **`.app` o ejecutable** |
 | Instalación del plugin | `plugin_manager install_bundle` | **Igual** |
@@ -79,7 +79,8 @@ Recomendación: **AppKit** si el objetivo es la mejor integración en macOS;
 
 ## 3. Paso 1: hacer el host multiplataforma
 
-En `index.js`, separa la ruta de estado por plataforma:
+En `index.js` la ruta ya se resuelve por plataforma. La implementación actual es
+equivalente a:
 
 ```js
 import { homedir } from 'node:os';
@@ -102,30 +103,33 @@ cambia.
 
 ### Autoarranque en macOS
 
-Hoy `startNativeOverlay` solo hace algo en `win32`. Añade una rama `darwin`:
+El repositorio ya es platform-adaptive: `index.js` lee `overlay/platforms.json`,
+resuelve la entrada de `process.platform` y arranca el overlay con `spawn`.
+Para macOS no hay que añadir una rama `darwin` al host:
 
-```js
-function overlayExecutable(packageDir) {
-  if (process.platform === 'darwin') {
-    return join(packageDir, 'macos', 'DSHSessionNotifier.app', 'Contents', 'MacOS', 'DSHSessionNotifier');
-  }
-  return null;
-}
+1. Coloca la app en `overlay/macos/DSHSessionNotifier.app`.
+2. En `overlay/platforms.json`, pon `darwin.supported` en `true`. La entrada ya
+   existe:
 
-if (process.platform === 'darwin') {
-  const executable = overlayExecutable(packageDir);
-  if (existsSync(executable)) {
-    child = spawn(executable, [], { stdio: 'ignore' });
-    child.on('error', console.error);
-    child.unref();
+```json
+{
+  "darwin": {
+    "supported": true,
+    "kind": "executable",
+    "entry": "macos/DSHSessionNotifier.app/Contents/MacOS/DSHSessionNotifier",
+    "label": "macOS AppKit overlay"
   }
 }
 ```
 
+El host ya soporta `kind: "executable"`: lanza ese binario y lo termina con
+`child.kill()` cuando se cierra DSH. Si la entrada no existe, el host solo
+registra un aviso y el puente de estado sigue activo.
+
 Notas:
 
 - Arranca el **ejecutable interno** del `.app`, no `open -a`, para conservar el
-  `child` y poder terminarlo con `child.kill()` al cerrar DSH.
+  `child` y poder terminarlo al cerrar DSH.
 - Si usas `open -a`, tendrás que localizar el PID por bundle id y terminarlo
   aparte; es más frágil.
 - Alternativa: un `LaunchAgent` con `RunAtLoad`/`KeepAlive`. Es útil si quieres
@@ -141,7 +145,7 @@ Notas:
 Estructura sugerida:
 
 ```text
-macos/
+overlay/macos/
   DSHSessionNotifier.xcodeproj/        # o Package.swift
   Sources/
     AppDelegate.swift

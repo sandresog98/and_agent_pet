@@ -1,0 +1,20 @@
+{
+  "win32": {
+    "supported": true,
+    "kind": "powershell",
+    "entry": "windows/dsh-session-notifier-overlay.ps1",
+    "label": "Windows WPF overlay"
+  },
+  "darwin": {
+    "supported": false,
+    "kind": "executable",
+    "entry": "macos/DSHSessionNotifier.app/Contents/MacOS/DSHSessionNotifier",
+    "label": "macOS AppKit overlay (pending)"
+  },
+  "linux": {
+    "supported": false,
+    "kind": "executable",
+    "entry": "linux/dsh-session-notifier-overlay",
+    "label": "Linux overlay (pending)"
+  }
+}

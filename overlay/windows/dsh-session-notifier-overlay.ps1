@@ -468,7 +468,8 @@ public static class DshOverlayHitTest {
   function Load-GengarFrameSet([string]$name) {
     $frames = @()
     try {
-      $folder = Join-Path $PSScriptRoot ('frames\' + $name)
+      $framesRoot = Join-Path (Split-Path -Parent $PSScriptRoot) 'frames'
+      $folder = Join-Path $framesRoot $name
       if (-not (Test-Path -LiteralPath $folder)) { return $frames }
       foreach ($file in (Get-ChildItem -LiteralPath $folder -Filter 'frame-*.png' | Sort-Object Name)) {
         try {

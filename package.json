@@ -1,9 +1,9 @@
 {
   "name": "dsh-session-notifier",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "private": true,
   "type": "module",
-  "description": "Native Windows companion overlay with a Gengar pet, status bubble, and two distinct soft chimes for DeepSeek Harness session alerts.",
+  "description": "Single-repo, platform-adaptive native overlay for DeepSeek Harness with a Gengar-ready pet, activity bubble, and two soft alert chimes.",
   "license": "MIT",
   "author": "Andres Olaya",
   "repository": {
@@ -43,11 +43,12 @@
     "cordis.patch.yml",
     "locale/*.json",
     "icon.svg",
-    "overlay/*.ps1",
-    "overlay/*.cmd",
-    "overlay/*.md",
+    "overlay/platforms.json",
+    "overlay/README.md",
+    "overlay/windows/**",
+    "overlay/macos/**",
+    "overlay/linux/**",
     "overlay/frames/README.md",
-    "overlay/frames/*.png",
     "overlay/frames/*/*.png",
     "tools/*.py"
   ],
