@@ -37,6 +37,7 @@
     "LICENSE",
     "NOTICE.md",
     "requirements.txt",
+    "docs/*.md",
     "index.js",
     "client.js",
     "cordis.patch.yml",

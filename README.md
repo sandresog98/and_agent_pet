@@ -6,6 +6,8 @@ El plugin de la interfaz web es un puente invisible: ya no dibuja una campana de
 
 > Repositorio: <https://github.com/sandresog98/and_agent_pet>
 
+> ¿Quieres llevarlo a macOS? Hay una guía de portabilidad en [docs/MACOS.md](docs/MACOS.md).
+
 ## Características
 
 - Mascota Gengar animada por frames (idle, thinking, shell, buscando, approval, happy, excited, sad, sleeping, writing).
