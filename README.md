@@ -53,6 +53,8 @@ python tools\extract_gengar_frames.py --zip "C:\ruta\a\gengar.zip"
 
 El script extrae los frames en `overlay/frames/<estado>/`. También acepta `--spritesheet`.
 
+Después de extraerlos, reinicia DSH o cierra y vuelve a abrir el overlay para que cargue los frames nuevos.
+
 ## Cómo funciona
 
 ```

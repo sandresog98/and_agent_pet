@@ -11,4 +11,5 @@ python tools/extract_gengar_frames.py --zip "C:\path\to\gengar.zip"
 ```
 
 The script writes `frame-*.png` files into `overlay/frames/<state>/`. Without
-them, the overlay uses its original generic ghost pet.
+them, the overlay uses its original generic ghost pet. Restart DSH or reopen
+the overlay after extracting so it loads the new frames.

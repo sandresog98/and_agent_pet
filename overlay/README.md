@@ -80,7 +80,7 @@ El repositorio público no incluye los frames de Gengar. Usa un ZIP o spriteshee
 python tools\extract_gengar_frames.py --zip "C:\ruta\a\gengar.zip"
 ```
 
-Sin frames, el overlay usa una mascota genérica de respaldo. No se descargan imágenes de terceros.
+Sin frames, el overlay usa una mascota genérica de respaldo. No se descargan imágenes de terceros. Reinicia DSH o vuelve a abrir el overlay después de extraerlos.
 
 ## Limitaciones
 
